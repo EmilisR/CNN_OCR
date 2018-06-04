@@ -1,0 +1,301 @@
+\documentclass{VUMIFPSkursinis}
+\usepackage{algorithmicx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{caption}
+\usepackage{color}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{subfig}
+\usepackage{wrapfig}
+
+% Titulinio aprašas
+\university{Vilniaus universitetas}
+\faculty{Matematikos ir informatikos fakultetas}
+\department{Programų sistemų katedra}
+\papertype{Kursinis darbas}
+\title{Automobilių numerių atpažinimas naudojant neuroninius tinklus ir OCR}
+\titleineng{Car Number Plate Recognition Using Neural Networks and OCR}
+\status{3 kurso 5 grupės studentas}
+\author{Emilis Ruzveltas}
+\supervisor{dr. Vytautas Valaitis}
+\date{Vilnius – \the\year}
+
+% Nustatymai
+\setmainfont{Palemonas}   % Pakeisti teksto šriftą į Palemonas (turi būti įdiegtas sistemoje)
+\bibliography{bibliografija}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\sectionnonum{Įvadas}
+Diena iš dienos transporto priemonių numerių atpažinimo sistemos tampa vis aktualesnės šių dienų 
+saugumo reikalavimuose. Didžioji dalis pastatų ir aikštelių yra aprūpintos apsaugos kameromis bei
+visą parą vaizdą stebinčiais apsaugos darbuotojais. Esminė savybė norint užtikrinti išmanų vaizdo
+stebėjimą ir apdorojimą - atpažinimo sistemų automatizavimas. Automobilių numerių atpažinimo sistemos
+remiasi tuo, kad kiekviena transporto priemonė turi unikalų identifikacinį kodą, kuris leidžia
+vienareikšmiškai nustatyti transporto priemonės savininką. Techniškai automobilių numerių atpažinimas
+yra paveikslėlių apdorojimo programa, naudojantis specialiu algoritmu išgauti rezultatus iš nuotraukos.
+Automatinis paveikslėlių atpažinimas turi platų spektrą pritaikimo sričių, tokių kaip nusikaltėlių sekimas,
+bendruomenės aplinkos stebėjimas, automobilių patikra, automatinis kelių mokesčių surinkimas, išmanus eismo
+reguliavimas.
+\cite{bhushan2013license}
+
+\sectionnonumnocontent{Darbo tikslas}
+Sukurti programą, kuri gebėtų atpažinti lietuviškus automobilio numerius paveikslėlyje panaudojant
+konvoliucinį neuroninį tinklą 
+(toliau CNN\footnote{CNN - trumpinys angl. Convolutional Neural Network - konvoliucinis neuroninis tinklas}) (angl. Convolutional Neural Network)
+ieškant numerio rėmelio bei Optinę ženklų atpažinimo 
+(toliau OCR\footnote{OCR - trumpinys angl. Optical Character Recognition - Optinis ženklų atpažinimas.}) (angl. Optical Character Recognition) 
+programą atpažinti numerį.
+
+\sectionnonumnocontent{Uždaviniai}
+Šiame darbe išsikeltam tikslui įgyvendinti apsibrėžti 5 uždaviniai:
+
+\begin{itemize}
+  \item Susigeneruoti didelį kiekį paveikslėlių.
+  \item Apmokyti konvoliucinį neuroninį tinklą pateikiant sugeneruotus paveiklėlius.
+  \item Panaudoti konvoliucinį neuroninį tinklą atpažįstant numerio rėmelį paveikslėlyje.
+  \item Gautą numerio rėmelį pasiųsti į OCR programą ir gauti atpažintą numerį.
+  \item Atvaizduoti gautus rezultatus pradiniame paveikslėlyje.
+\end{itemize}
+
+\section{Mokymo duomenų generavimas}
+Norint sukurti realiai veikiančią programą, kuri naudotų neuroninį tinklą išgauti tikėtinam rezultatui,
+tinklą reikia apmokyti su dideliu kiekiu duomenų. Apmokant bet kokį neuroninį tinklą turi būti būti pateiktas
+duomenų rinkinys su norimu gauti rezultatu. 
+
+\subsection{Generavimo parametrai}
+
+Šiam tyrimui buvo pasirinkta generuoti duomenų rinkinį, kurių kiekvienas paveikslėlis būtų 128 pikselių
+pločio ir 64 pikselių ilgio. Toks pasirinktas būdas užtikrina, kad neuroninis tinklas bus pajėgus suprasti 
+paveikslėlio turinį, o dydis pakankamai mažas, kad būtų galima turėti efektyviai veikiantį neuroninį tinklą.
+
+Sugeneruotų paveikslėlių pavyzdžiai:
+
+\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=4cm]{train_images/1_good.png}
+  \captionof{figure}{Tikimasis rezultatas \textbf{MNI144 1}.}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=4cm]{train_images/1_good2.png}
+  \captionof{figure}{Tikimasis rezultatas \textbf{ZVM557 1}.}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=4cm]{train_images/0_small.png}
+  \captionof{figure}{Tikimasis rezultatas \textbf{COH150 0} (per mažas numeris).}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=4cm]{train_images/0_truncated.png}
+  \captionof{figure}{Tikimasis rezultatas \textbf{GTK311 0} (ne pilnas numeris).}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=4cm]{train_images/0_truncated2.png}
+  \captionof{figure}{Tikimasis rezultatas \textbf{ABN046 0} (ne pilnas numeris).}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=4cm]{train_images/0_not_present.png}
+  \captionof{figure}{Tikimasis rezultatas \textbf{KLF155 0} (nėra numerio).}
+\end{minipage}
+
+Pirmoji paveikslėlio rezultato dalis nurodo, koks yra teisingas numeris. Antroji - numerio rėmelio egzistavimas paveikslėlyje.
+Jei reikšmė 1 - numeris yra tinkamas nuskaitymui, 0 - neatitinka kriterijų. 
+
+Kriterijai, kurie nusako ar numerio rėmelis yra tinkamas apdorojimui:
+
+\begin{itemize}
+  \item Visas rėmelio plotas yra paveikslėlyje.
+  \item Rėmelio plotis yra mažesnis nei 80\% paveikslėlio pločio.
+  \item Rėmėlio aukštis yra mažesnis nei 87,5\% paveikslėlio aukščio.
+  \item Rėmelio plotis yra didesnis nei 60\% paveikslėlio pločio.
+  \item Rėmėlio aukštis yra didesnis nei 60\% paveikslėlio aukščio.
+\end{itemize}
+
+Su tokiais parametrais galima naudoti judantį 128x64 pikselių langelį, kuris judėtų po 8 pikselius ir kas kartą padidintų rėmelį
+\begin{math}
+  \sqrt{2}
+\end{math}
+kartų. Tokiu būdu užtikrinama, kad nebus praleista nei viena paveikslėlio vieta, o taip pat pakankamai efektyviai ir greitai pereinamas
+visas paveikslėlis.
+
+\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=10cm]{train_images/generating.png}
+  \captionof{figure}{Paveikslėlių generavimo schema}
+\end{minipage}
+
+\subsubsection{Numerio generavimas}
+Numeris generuojamas pagal Lietuvos Respublikos Valstybinių numerių formatą, kuris yra - 3 lotyniško alfabeto
+raidės (išskyrus lietuvių kalboje nenaudojamas raides) ir 3 arabiški skaičiai. Generuojant numerį, 
+atsitiktine tvarka parenkamos trys raidės iš 23 raidžių žodyno \textit{ABCDEFGHIJKLMNOPRSTUVYZ} bei 3 skaičiai 
+iš skaičių žodyno \textit{0123456789}. Maksimalus galimas unikalių numerių skaičius siekia:
+\begin{equation}
+  23^3 * 10^3 = 12167000;
+\end{equation}
+
+\subsubsection{Transformacija}
+Norint, kad tinklas efektyviai mokytųsi ir atpažintų nuotraukas realaus pasaulio sąlygomis, generuojant duomenų
+rinkinį buvo pritaikyta remėlio transformacija. Tai atlikti buvo pasitelktas metodas generuoti atsitiktines
+reikšmes X, Y, Z ašims ir pritaikyti Oilerio kampų metodą. \cite{slabaugh1999computing}
+
+TODO
+
+Ašių atsitiktinių reikšmių rėžiai:
+\begin{equation}
+  -0.3 <= X <= 0.3
+\end{equation}
+\begin{equation}
+  -0.2 <= Y <= 0.2
+\end{equation}
+\begin{equation}
+  -1.2 <= Z <= 1.2
+\end{equation}
+
+$TODO (paaiskinti euler_to_mat koda)$
+
+\subsubsection{Kompozicija}
+Transformuotas automobilio numerio rėmelis sukomponuojamas su atsitiktine nuotrauka atsitiktinėje vietoje.
+
+\begin{equation}
+  A = 0.6; 
+\end{equation}
+\begin{equation}
+  B = 0.875;
+\end{equation}
+\begin{equation}
+  C = 1.5.
+\end{equation}
+kur:
+\begin{itemize}
+  \item A - minimalus numerio rėmelio plotis,
+  \item B - maksimalus numerio rėmelio aukštis,
+  \item C - dydžio variacijos koeficientas.
+\end{itemize}
+\begin{equation}
+  min = (A + B) * 0.5 - (B - A) * 0.5 * C;
+\end{equation}
+\begin{equation}
+  min = ((0.6 + 0.875) * 0.5) - ((0.875 - 0.6) * 0.5 * 1.5);
+\end{equation}
+\begin{equation}
+  min = (1.475 * 0.5) - (0.275 * 0.5 * 1.5);
+\end{equation}
+\begin{equation}
+  min = 0.7375 - 0.20625;
+\end{equation}
+\begin{equation}
+  \textbf{min = 0.53125};
+\end{equation}
+\begin{equation}
+  max = (A + B) * 0.5 + (B - A) * 0.5 * C;
+\end{equation}
+\begin{equation}
+  max = ((0.6 + 0.875) * 0.5) + ((0.875 - 0.6) * 0.5 * 1.5);
+\end{equation}
+\begin{equation}
+  max = (1.475 * 0.5) + (0.275 * 0.5 * 1.5);
+\end{equation}
+\begin{equation}
+  max = 0.7375 + 0.20625;
+\end{equation}
+\begin{equation}
+  \textbf{max = 0.94375};
+\end{equation}
+\begin{equation}
+  x = R[min, max];
+\end{equation}
+\begin{equation}
+  p = 1, \text{kai } x \in [A, B];
+\end{equation}
+\begin{equation}
+  p = 0, \text{kai } x \in [A, B];
+\end{equation}
+kur:
+\begin{itemize}
+  \item min - minimalus generuojamas dydžio koeficientas,
+  \item max - maksimalus generuojamas dydžio koeficientas,
+  \item R - atsitiktinio skaičiaus generavimo funkcija tarp dviejų reikšmių,
+  \item x - numerio rėmelio dydžio koeficientas lyginant su pradiniu dydžiu,
+  \item p - jei 1 - rėmelis tinkamai egzistuoja nuotraukoje, 0 - rėmelis neegzistuoja arba yra netinkamas.
+\end{itemize}
+
+
+
+Atsitiktinių reikšmių rėžis, kuris nusako kurioje vietoje turėtų atsidurti rėmelis
+\subsubsection{Triukšmo pridėjimas}
+Triukšmas paveikslėliui pridedamas pritaikant Gauso normalųjį skirstinį su reikšme 0.05.
+
+
+
+\section{Neuroninio tinklo konfigūracija}
+
+\section{Neuroninio tinklo apmokymas}
+
+\section{Numerio rėmelio koordinačių gavimas naudojantis CNN}
+
+\section{Numerio atpažinimas pasitelkiant OCR}
+
+\section{Gautų rezultatų atvaizdavimas nuotraukoje}
+
+\sectionnonum{Rezultatai ir išvados}
+Rezultatų ir išvadų dalyje turi būti aiškiai išdėstomi pagrindiniai darbo
+rezultatai (kažkas išanalizuota, kažkas sukurta, kažkas įdiegta) ir pateikiamos
+išvados (daromi nagrinėtų problemų sprendimo metodų palyginimai, teikiamos
+rekomendacijos, akcentuojamos naujovės).
+
+Kas atlikta:
+
+1. Sugeneruota daug paveiksliukų, skirtų apmokyti neuroninį tinklą.
+
+2. Panaudotas Google Street View konvoliucinis neuroninis tinklas.
+
+3. Tinklas apmokytas su 100.000 sugeneruotų paveikslėlių.
+
+4. Tinklas ištestuotas su tikromis nuotraukomis, kuriose yra lietuviški automobilių numeriai.
+
+Išvados:
+
+1. Pavyko atpažinti automobilių numerius naudojantis konvoliuciniu neuroniniu tinklu.
+
+2. Sukurtas neuroninis tinklas nėra pakankamai spartus, norint jį naudoti realiu laiku.
+
+3. Tinklas atpažįsta tik pakankamai horizontaliai tiesiai padarytas nuotraukas.
+
+
+\printbibliography[heading=bibintoc]  % Šaltinių sąraše nurodoma panaudota
+% literatūra, kitokie šaltiniai. Abėcėlės tvarka išdėstomi darbe panaudotų
+% (cituotų, perfrazuotų ar bent paminėtų) mokslo leidinių, kitokių publikacijų
+% bibliografiniai aprašai.  Šaltinių sąrašas spausdinamas iš naujo puslapio.
+% Aprašai pateikiami netransliteruoti. Šaltinių sąraše negali būti tokių
+% šaltinių, kurie nebuvo paminėti tekste.
+
+% \sectionnonum{Sąvokų apibrėžimai}
+\sectionnonum{Santrumpos}
+Sąvokų apibrėžimai ir santrumpų sąrašas sudaromas tada, kai darbo tekste
+vartojami specialūs paaiškinimo reikalaujantys terminai ir rečiau sutinkamos
+santrumpos.
+
+\appendix  % Priedai
+% Prieduose gali būti pateikiama pagalbinė, ypač darbo autoriaus savarankiškai
+% parengta, medžiaga. Savarankiški priedai gali būti pateikiami ir
+% kompaktiniame diske. Priedai taip pat numeruojami ir vadinami. Darbo tekstas
+% su priedais susiejamas nuorodomis.
+
+\end{document}
