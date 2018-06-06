@@ -142,6 +142,7 @@ visas paveikslėlis.
 \end{minipage}
 
 \subsubsection{Numerio generavimas}
+Numeris ir rėmelio spalva generuojama atsitiktinai, tačiau tekstas turi būti tamsesnis negu rėmelis. Tokiu būdu bandoma atkurti realaus pasaulio apšvietimo variacijas.
 Numeris generuojamas pagal Lietuvos Respublikos Valstybinių numerių formatą, kuris yra - 3 lotyniško alfabeto
 raidės (išskyrus lietuvių kalboje nenaudojamas raides) ir 3 arabiški skaičiai. Generuojant numerį, 
 atsitiktine tvarka parenkamos trys raidės iš 23 raidžių žodyno \textit{ABCDEFGHIJKLMNOPRSTUVYZ} bei 3 skaičiai 
@@ -151,10 +152,12 @@ iš skaičių žodyno \textit{0123456789}. Maksimalus galimas unikalių numerių
 \end{equation}
 
 \subsubsection{Transformacija}
+
 Norint, kad tinklas efektyviai mokytųsi ir atpažintų nuotraukas realaus pasaulio sąlygomis, generuojant duomenų
 rinkinį buvo pritaikyta remėlio transformacija. Tai atlikti buvo pasitelktas metodas generuoti atsitiktines
 reikšmes X, Y, Z ašims ir pritaikyti Oilerio kampų metodą. \cite{slabaugh1999computing}
-
+For example, yaw is allowed to vary a lot more than roll (you’re more likely to see a car turning a corner, than on its side).
+Reikšmių rėžiai pasirinkti tokie, kuriuos labiausiai tikėtina sutikti realiame pasaulyje.
 TODO
 
 Ašių atsitiktinių reikšmių rėžiai:
@@ -171,7 +174,11 @@ Ašių atsitiktinių reikšmių rėžiai:
 $TODO (paaiskinti euler_to_mat koda)$
 
 \subsubsection{Kompozicija}
+Turėti realų foną svarbu, kadangi tinklas turi išmokti surasti rėmelio kampus „nesukčiaudamas“. 
+Naudojant juodą foną, tinklas gali daryti prielaidą, kad remėlis yra ten, kur nėra juodos spalvos, o tai būtų netikslu realiame pasaulyje.
 Transformuotas automobilio numerio rėmelis sukomponuojamas su atsitiktine nuotrauka atsitiktinėje vietoje.
+Atsitiktinių nuotraukų šaltiniu naudojamas daugiau nei 100,000 nuotraukų duomenų rinkinys \cite{xiao2010sun}.
+Labai svarbu didelis kiekis nuotraukų, taip sumažinant riziką, kad neuroninis tinklas atsimins kiekvieną nuotrauką.
 
 \begin{equation}
   A = 0.6; 
@@ -240,6 +247,8 @@ kur:
 
 Atsitiktinių reikšmių rėžis, kuris nusako kurioje vietoje turėtų atsidurti rėmelis
 \subsubsection{Triukšmo pridėjimas}
+Triukšmas paveikslėlyje reikalingas, kadangi realiame pasaulyje pasitaiko, kad kameros sensorius generuoja triukšmus, o taip pat,
+kad neuroninis tinklas nepersimokytų ir neskirstytų paveikslėlių pagal vieną konkrečią spalvą ar būtų priklausomas nuo „aštrių“ kampų.
 Triukšmas paveikslėliui pridedamas pritaikant Gauso normalųjį skirstinį su reikšme 0.05.
 
 
